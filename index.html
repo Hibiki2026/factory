@@ -1,178 +1,676 @@
 
-<!-- ① <style> 内の最後に追加 -->
-#topGuide{
- position:absolute;top:64px;left:50%;transform:translateX(-50%);
- z-index:8;background:#172630ed;border:2px solid #71838d;
- border-radius:9px;padding:8px 16px;text-align:center;
- min-width:230px;max-width:90vw;pointer-events:none;
- box-shadow:0 3px 12px #0008
-}
-#topGuide small{display:block;color:#9fb7c4;font-size:10px}
-#topGuide strong{font-size:14px}
-#hotbar{
- position:absolute;top:112px;left:50%;transform:translateX(-50%);
- display:flex;gap:5px;z-index:9;max-width:96vw;
- overflow-x:auto;padding:5px;background:#101820d9;
- border:2px solid #71838d;border-radius:9px
-}
-.hotSlot{
- position:relative;flex:0 0 55px;height:55px;
- background:#26343d;border:2px solid #687780;
- border-radius:5px;color:white;display:flex;
- flex-direction:column;align-items:center;justify-content:center;
- padding:2px;font-size:10px;cursor:pointer
-}
-.hotSlot.selected{
- border:3px solid #fff18a;background:#58634b;
- box-shadow:0 0 8px #fff18a
-}
-.hotSlot .slotIcon{font-size:22px;line-height:25px}
-.hotSlot .slotCount{
- position:absolute;right:4px;bottom:2px;
- font-size:12px;font-weight:bold;text-shadow:1px 1px 2px #000
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>FACTORY WORLD</title>
+<style>
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101820;color:white;font-family:Arial,sans-serif;touch-action:none}
+canvas{display:block;touch-action:none}
+button{background:#203744;color:white;border:1px solid #68818e;border-radius:8px;padding:9px 11px;font-size:12px;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.4}
+button.active{background:#168c69;border-color:#5cffbd}
+#hud{position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:5;pointer-events:none;flex-wrap:wrap}
+.stat{background:#14232be8;padding:7px 9px;border:1px solid #526773;border-radius:8px;font-size:12px;font-weight:bold}
+#help{position:absolute;right:8px;top:8px;background:#14232be8;padding:8px;border-radius:8px;font-size:10px;line-height:1.6;z-index:5;pointer-events:none}
+#topGuide{position:absolute;top:55px;left:50%;transform:translateX(-50%);z-index:8;background:#172630ed;border:2px solid #71838d;border-radius:9px;padding:7px 14px;text-align:center;min-width:220px;max-width:90vw;pointer-events:none;box-shadow:0 3px 12px #0008}
+#topGuide small{display:block;color:#9fb7c4;font-size:9px}
+#topGuide strong{font-size:13px}
+#hotbar{position:absolute;top:105px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:9;max-width:97vw;overflow-x:auto;padding:5px;background:#101820df;border:2px solid #71838d;border-radius:9px}
+.hotSlot{position:relative;flex:0 0 53px;height:52px;padding:2px;background:#26343d;border:2px solid #687780;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px}
+.hotSlot.selected{border:3px solid #fff18a;background:#58634b;box-shadow:0 0 8px #fff18a}
+.slotIcon{font-size:20px;line-height:23px}
+.slotCount{position:absolute;right:3px;bottom:1px;font-size:12px;font-weight:bold;text-shadow:1px 1px 2px #000}
+#message{position:absolute;top:170px;left:50%;transform:translateX(-50%);background:#14232bed;padding:10px 16px;border-radius:10px;display:none;z-index:30;font-size:12px;white-space:nowrap}
+#buildInfo{position:absolute;left:9px;bottom:105px;background:#14232be8;padding:8px;border-radius:8px;font-size:10px;z-index:5;pointer-events:none}
+#bottom{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:98%;z-index:10}
+#bottom button{font-size:10px;padding:8px 7px}
+#mine{background:#8b5722;border-color:#e3b16c;font-weight:bold}
+#reset{position:absolute;right:9px;bottom:105px;z-index:10}
+#stick{position:absolute;left:13px;bottom:125px;width:108px;height:108px;border-radius:50%;border:2px solid #d7e7efaa;background:#14232baa;z-index:9;touch-action:none}
+#stick:after{content:"移動";position:absolute;left:50%;top:7px;transform:translateX(-50%);font-size:10px;pointer-events:none}
+#knob{position:absolute;width:44px;height:44px;left:30px;top:39px;border-radius:50%;background:#8eb7c9e8;border:2px solid white;pointer-events:none}
+#shopOpen{position:absolute;left:50%;top:185px;transform:translateX(-50%);z-index:12;display:none;background:#9a702b;border-color:#f5d58b}
+#shopPanel{position:absolute;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,92vw);max-height:80vh;overflow:auto;background:#172a35;border:2px solid #d2a74e;border-radius:15px;padding:16px;display:none;box-shadow:0 12px 50px #000b}
+#shopPanel h2{margin:0 0 8px;font-size:20px}
+#shopPanel p{font-size:12px;color:#c5d5dc}
+.shopItem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #53636c}
+.shopItem span{font-size:12px}
+#shopPanel .close{width:100%;margin-top:12px;background:#79512e}
+#inventory{font-size:11px;background:#0d1b22;padding:8px;border-radius:8px;margin:10px 0}
+#sellAll{width:100%;background:#168c69}
 @media(max-width:700px){
- #topGuide{top:60px;padding:6px 10px}
- #hotbar{top:108px;gap:3px}
- .hotSlot{flex-basis:45px;height:48px}
- .hotSlot .slotIcon{font-size:19px}
+ #hud{top:5px;left:5px;gap:3px}
+ .stat{padding:6px 7px;font-size:10px}
+ #help{top:8px;right:5px;font-size:9px}
+ #topGuide{top:55px;padding:6px 10px}
+ #hotbar{top:101px;gap:3px}
+ .hotSlot{flex-basis:46px;height:47px}
+ .slotIcon{font-size:18px}
+ #message{top:158px}
+ #shopOpen{top:172px}
+ #bottom{bottom:5px;gap:3px}
+ #bottom button{font-size:9px;padding:7px 5px}
+ #stick{left:9px;bottom:135px;width:100px;height:100px}
+ #knob{left:27px;top:36px}
+ #reset{right:7px;bottom:135px;font-size:9px}
+ #buildInfo{bottom:95px;left:7px;font-size:9px}
 }
 </style>
-
-<!-- ② <body> 内、#hud の後に追加 -->
-<div id="topGuide">
- <small>FACTORY WORLD / NEXT MISSION</small>
- <strong id="goalText">鉱石を採掘しよう！</strong>
+</head>
+<body>
+<div id="hud">
+ <div class="stat">💰 <span id="money">100</span>円</div>
+ <div class="stat">⛏ 鉱石 <span id="ore">0</span></div>
+ <div class="stat">📦 製品 <span id="product">0</span></div>
 </div>
+<div id="help"><b>操作</b><br>左下：移動<br>画面ドラッグ：視点<br>E / 採掘長押し：採掘<br>R：回転<br>タップ：設置</div>
+
+<div id="topGuide"><small>FACTORY WORLD / NEXT MISSION</small><strong id="goalText">鉱石を採掘しよう！</strong></div>
+
 <div id="hotbar">
- <button class="hotSlot" data-build="belt">
-  <span class="slotIcon">🟫</span><span>ベルト</span>
-  <span class="slotCount" id="count-belt">0</span>
- </button>
- <button class="hotSlot" data-build="miner">
-  <span class="slotIcon">⛏️</span><span>採掘機</span>
-  <span class="slotCount" id="count-miner">0</span>
- </button>
- <button class="hotSlot" data-build="crusher">
-  <span class="slotIcon">⚙️</span><span>粉砕機</span>
-  <span class="slotCount" id="count-crusher">0</span>
- </button>
- <button class="hotSlot" data-build="smelter">
-  <span class="slotIcon">🔥</span><span>精錬機</span>
-  <span class="slotCount" id="count-smelter">0</span>
- </button>
- <button class="hotSlot" data-build="assembler">
-  <span class="slotIcon">🔩</span><span>製造機</span>
-  <span class="slotCount" id="count-assembler">0</span>
- </button>
- <button class="hotSlot" data-build="seller">
-  <span class="slotIcon">💰</span><span>販売機</span>
-  <span class="slotCount" id="count-seller">0</span>
- </button>
+ <button class="hotSlot" data-build="belt"><span class="slotIcon">🟫</span>ベルト<span class="slotCount" id="count-belt">0</span></button>
+ <button class="hotSlot" data-build="miner"><span class="slotIcon">⛏️</span>採掘機<span class="slotCount" id="count-miner">0</span></button>
+ <button class="hotSlot" data-build="crusher"><span class="slotIcon">⚙️</span>粉砕機<span class="slotCount" id="count-crusher">0</span></button>
+ <button class="hotSlot" data-build="smelter"><span class="slotIcon">🔥</span>精錬機<span class="slotCount" id="count-smelter">0</span></button>
+ <button class="hotSlot" data-build="assembler"><span class="slotIcon">🔩</span>製造機<span class="slotCount" id="count-assembler">0</span></button>
+ <button class="hotSlot" data-build="seller"><span class="slotIcon">💰</span>販売機<span class="slotCount" id="count-seller">0</span></button>
 </div>
 
-<!-- ③ updateUI() を丸ごと置き換え -->
-<script>
+<div id="message"></div>
+<div id="buildInfo">建築モード：なし</div>
+<div id="stick"><div id="knob"></div></div>
+<button id="shopOpen">🏪 販売所を開く</button>
+<button id="reset">リセット</button>
+
+<div id="bottom">
+ <button id="mine">⛏ 採掘（長押し）</button>
+ <button id="refund">↩ 返金モード</button>
+ <button id="cancel">解除</button>
+</div>
+
+<div id="shopPanel">
+ <h2>🏪 FACTORY SHOP</h2>
+ <p>鉱石を売って、お金で設備を購入しよう！</p>
+ <div id="inventory">持ち物</div>
+ <button id="sellAll">持っている鉱石を全部売る</button>
+ <h3>設備購入</h3>
+ <div id="shopItems"></div>
+ <button class="close" id="shopClose">閉じる</button>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from "three";
+
+/* ===== 3D基本設定 ===== */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x9bc5d9);
+scene.fog=new THREE.Fog(0x9bc5d9,35,110);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,250);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x536b50,2));
+const sun=new THREE.DirectionalLight(0xffffff,2.2);
+sun.position.set(25,40,20);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);scene.add(sun);
+
+const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+const grass=mat(0x52834b),concrete=mat(0x858b8d),metal=mat(0x67747b);
+const dark=mat(0x28343b),gold=mat(0xd8a53d),green=mat(0x38b76c);
+const beltMat=mat(0x292f35);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),grass);
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const factoryFloor=new THREE.Mesh(new THREE.BoxGeometry(45,.2,45),concrete);
+factoryFloor.receiveShadow=true;scene.add(factoryFloor);
+const grid=new THREE.GridHelper(45,45,0x53666c,0x68787b);
+grid.position.y=.12;scene.add(grid);
+
+function cube(w,h,d,material,x,y,z,parent=scene){
+ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+ m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+
+/* ===== 木 ===== */
+for(let i=0;i<75;i++){
+ const x=(Math.random()-.5)*110,z=(Math.random()-.5)*110;
+ if(Math.abs(x)<27&&Math.abs(z)<27)continue;
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,1.7,7),mat(0x65452e));
+ trunk.position.set(x,.85,z);scene.add(trunk);
+ const leaves=new THREE.Mesh(new THREE.ConeGeometry(1.2,3,7),mat(0x28653b));
+ leaves.position.set(x,2.8,z);scene.add(leaves);
+}
+
+/* ===== プレイヤー ===== */
+const player=new THREE.Group();
+const skin=mat(0xf0c69e),shirt=mat(0x2778bb),pants=mat(0x263b65);
+const arms=[],legs=[];
+const torso=new THREE.Mesh(new THREE.BoxGeometry(.65,.85,.38),shirt);
+torso.position.y=1.15;player.add(torso);
+const head=new THREE.Mesh(new THREE.BoxGeometry(.43,.48,.43),skin);
+head.position.y=1.82;player.add(head);
+const hair=new THREE.Mesh(new THREE.BoxGeometry(.45,.14,.45),mat(0x493326));
+hair.position.y=2.12;player.add(hair);
+for(const x of [-.105,.105]){
+ const eye=new THREE.Mesh(new THREE.BoxGeometry(.045,.055,.025),mat(0x202020));
+ eye.position.set(x,1.87,.222);player.add(eye);
+}
+for(const side of [-1,1]){
+ const arm=new THREE.Group();arm.position.set(side*.43,1.45,0);
+ cube(.2,.48,.22,shirt,0,-.22,0,arm);cube(.18,.18,.18,skin,0,-.51,0,arm);
+ player.add(arm);arms.push(arm);
+ const leg=new THREE.Group();leg.position.set(side*.18,.78,0);
+ cube(.25,.55,.29,pants,0,-.27,0,leg);
+ cube(.27,.15,.4,mat(0x252a30),0,-.56,.06,leg);
+ player.add(leg);legs.push(leg);
+}
+scene.add(player);player.position.set(0,0,8);
+
+/* ===== データ ===== */
+let yaw=0,pitch=.35,money=100,ore=0,product=0;
+let buildMode=null,rotation=0,refundMode=false;
+let machines=[],items=[],keys={};
+let mineHeld=false,lastMine=0,walkTime=0,messageTimer;
+const CELL=2;
+const prices={belt:20,miner:150,crusher:180,smelter:250,assembler:350,seller:250};
+const names={belt:"ベルトコンベア",miner:"採掘機",crusher:"粉砕機",smelter:"精錬機",assembler:"部品製造機",seller:"販売機"};
+const inventory={belt:0,miner:0,crusher:0,smelter:0,assembler:0,seller:0};
+const icons={belt:"🟫",miner:"⛏️",crusher:"⚙️",smelter:"🔥",assembler:"🔩",seller:"💰"};
+function msg(s){
+ const el=document.getElementById("message");el.textContent=s;el.style.display="block";
+ clearTimeout(messageTimer);messageTimer=setTimeout(()=>el.style.display="none",1800);
+}
+function updateGoal(){
+ const el=document.getElementById("goalText");
+ if(items.some(i=>!i.belt&&!i.flying))el.textContent="落ちている鉱石を拾おう！";
+ else if(ore===0)el.textContent="鉱床の近くで採掘しよう！";
+ else if(inventory.belt>0)el.textContent="ベルトコンベアを設置しよう！";
+ else if(machines.length===0)el.textContent="販売所で設備を購入しよう！";
+ else if(!machines.some(m=>m.type==="crusher"))el.textContent="粉砕機を設置して生産ラインを作ろう！";
+ else if(!machines.some(m=>m.type==="smelter"))el.textContent="精錬機を設置しよう！";
+ else if(!machines.some(m=>m.type==="assembler"))el.textContent="部品製造機を設置しよう！";
+ else el.textContent="生産ラインをつないで製品を作ろう！";
+}
 function updateUI(){
  document.getElementById("money").textContent=Math.floor(money);
  document.getElementById("ore").textContent=ore;
  document.getElementById("product").textContent=product;
  document.getElementById("inventory").textContent=
-  "持ち物："+Object.entries(inventory)
-   .map(([k,v])=>names[k]+" "+v+"個").join(" / ");
-
+  "持ち物："+Object.entries(inventory).map(([k,v])=>names[k]+" "+v+"個").join(" / ");
  for(const type of Object.keys(inventory)){
-  const count=document.getElementById("count-"+type);
-  if(count)count.textContent=inventory[type];
+  const el=document.getElementById("count-"+type);
+  if(el)el.textContent=inventory[type];
  }
  updateGoal();
 }
+function snap(v){return Math.round(v/CELL)*CELL}
+function dirFor(rot){return new THREE.Vector3(Math.sin(rot),0,Math.cos(rot))}
+function distance(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
 
-function updateGoal(){
- const goal=document.getElementById("goalText");
- if(!goal)return;
+/* ===== 鉱床 ===== */
+const deposits=[];
+for(let i=0;i<5;i++){
+ const x=-16+i*8,z=-12,group=new THREE.Group();group.position.set(x,0,z);
+ for(let j=0;j<8;j++){
+  const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.5+Math.random()*.3,0),gold);
+  rock.position.set((Math.random()-.5)*1.5,.3+Math.random()*.25,(Math.random()-.5)*1.5);
+  rock.rotation.set(Math.random(),Math.random(),Math.random());group.add(rock);
+ }
+ scene.add(group);deposits.push({x,z,group});
+}
+function nearestDeposit(x=player.position.x,z=player.position.z){
+ let best=null,dist=Infinity;
+ for(const d of deposits){const n=Math.hypot(x-d.x,z-d.z);if(n<dist){dist=n;best=d}}
+ return dist<3.5?best:null;
+}
 
- if(ore===0&&items.some(i=>i.type==="ore"&&!i.belt)){
-  goal.textContent="落ちている鉱石を拾おう！";
- }else if(ore===0){
-  goal.textContent="鉱床の近くで採掘しよう！";
- }else if(inventory.belt===0&&money<prices.belt){
-  goal.textContent="鉱石を集めて販売所で売ろう！";
- }else if(inventory.belt>0){
-  goal.textContent="ベルトコンベアを設置しよう！";
- }else if(!machines.some(m=>m.type==="miner")){
-  goal.textContent="採掘機を購入して自動化しよう！";
- }else if(!machines.some(m=>m.type==="crusher")){
-  goal.textContent="粉砕機を設置して生産ラインを作ろう！";
- }else if(!machines.some(m=>m.type==="smelter")){
-  goal.textContent="精錬機を設置しよう！";
- }else if(!machines.some(m=>m.type==="assembler")){
-  goal.textContent="部品製造機を設置しよう！";
- }else{
-  goal.textContent="生産ラインをつないで製品を作ろう！";
+/* ===== 販売所 ===== */
+const shop=new THREE.Group();
+cube(3,.25,3,mat(0x8a572b),0,.2,0,shop);
+cube(2.4,1.5,.35,mat(0x694326),0,1,0,shop);
+cube(2.6,.25,.5,gold,0,1.85,.1,shop);
+cube(.6,.65,.12,green,0,1.05,.22,shop);
+cube(1.7,.45,.12,gold,0,2.25,.22,shop);
+shop.position.set(0,0,15);scene.add(shop);
+function nearShop(){return Math.hypot(player.position.x,player.position.z-15)<5}
+function openShop(){
+ if(!nearShop()){msg("販売所の近くに来てください");return}
+ document.getElementById("shopPanel").style.display="block";renderShop();
+}
+function closeShop(){document.getElementById("shopPanel").style.display="none"}
+document.getElementById("shopOpen").onclick=openShop;
+document.getElementById("shopClose").onclick=closeShop;
+function renderShop(){
+ const el=document.getElementById("shopItems");el.innerHTML="";
+ for(const [type,price] of Object.entries(prices)){
+  const row=document.createElement("div");row.className="shopItem";
+  const label=document.createElement("span");label.textContent=icons[type]+" "+names[type]+" — "+price+"円";
+  const btn=document.createElement("button");btn.textContent="購入";
+  btn.onclick=()=>{
+   if(money<price){msg("お金が足りません");return}
+   money-=price;inventory[type]++;updateUI();renderShop();msg(names[type]+"を購入！");
+  };
+  row.append(label,btn);el.appendChild(row);
  }
 }
-</script>
+document.getElementById("sellAll").onclick=()=>{
+ if(ore<=0){msg("売却できる鉱石がありません");return}
+ const earned=ore*10;money+=earned;msg(ore+"個の鉱石を売却！ +"+earned+"円");
+ ore=0;updateUI();renderShop();
+};
 
-<!-- ④ updateBeltItem() を丸ごと置き換え -->
-<script>
-function updateBeltItem(item,dt){
- const belt=item.belt;
- const d=dirFor(belt.rot);
-
- item.progress+=dt*2.1;
- item.x=belt.x+d.x*item.progress;
- item.z=belt.z+d.z*item.progress;
- item.mesh.position.set(item.x,.7,item.z);
-
- if(item.progress>=2){
-  const nx=belt.x+d.x*2;
-  const nz=belt.z+d.z*2;
-
-  const next=findBeltAt(nx,nz);
-  if(next){
-   attachToBelt(item,next);
-   return;
+/* ===== アイテム ===== */
+const itemColors={ore:0x9ba6b0,crushed:0xc0a77c,ingot:0xe4a83d,component:0x68b7b1,product:0x43d77d};
+function spawnItem(x,z,type){
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(.42,.42,.42),mat(itemColors[type]||0xffffff));
+ mesh.castShadow=true;scene.add(mesh);
+ const item={mesh,x,z,type,belt:null,progress:0,life:0,vy:2.5,vx:0,vz:0,flying:true};
+ items.push(item);mesh.position.set(x,.7,z);return item;
+}
+function removeItem(item){
+ scene.remove(item.mesh);const i=items.indexOf(item);if(i>=0)items.splice(i,1);
+}
+function pickupItems(){
+ let changed=false;
+ for(let i=items.length-1;i>=0;i--){
+  const item=items[i];if(item.belt||item.flying)continue;
+  if(distance(player.position,item)<1.35){
+   if(item.type==="ore")ore++;
+   else if(item.type==="product"||item.type==="component")product++;
+   else if(item.type==="ingot")ore+=2;
+   else if(item.type==="crushed")ore++;
+   removeItem(item);changed=true;msg("アイテムを拾った！");
   }
+ }
+ if(changed)updateUI();
+}
 
+/* ===== 手動採掘 ===== */
+function mine(){
+ if(Date.now()-lastMine<1000)return;
+ lastMine=Date.now();
+ if(!nearestDeposit()){msg("鉱床の近くに移動してください");return}
+ const x=player.position.x+Math.sin(player.rotation.y)*.8;
+ const z=player.position.z+Math.cos(player.rotation.y)*.8;
+ const item=spawnItem(x,z,"ore");
+ item.vx=(Math.random()-.5)*1.2;item.vz=(Math.random()-.5)*1.2;
+ msg("鉱石が落ちた！近づいて拾おう");
+}
+
+/* ===== 矢印 ===== */
+function makeArrow(color=0xffd34f){
+ const g=new THREE.Group(),material=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.2});
+ const shaft=new THREE.Mesh(new THREE.BoxGeometry(.13,.09,.65),material);
+ shaft.position.z=-.05;g.add(shaft);
+ const tip=new THREE.Mesh(new THREE.ConeGeometry(.24,.42,4),material);
+ tip.rotation.x=Math.PI/2;tip.position.z=.45;g.add(tip);return g;
+}
+
+/* ===== 機械 ===== */
+function createMachine(type,x,z,rot){
+ const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;
+ if(type==="belt"){
+  cube(1.9,.2,1.9,beltMat,0,.2,0,g);
+  cube(1.65,.08,1.65,metal,0,.35,0,g);
+  for(const side of [-1,1])cube(.12,.2,1.7,metal,side*.82,.48,0,g);
+  const strips=[];
+  for(let i=0;i<7;i++)strips.push(cube(1.35,.045,.1,mat(0x77848b),0,.42,-.8+i*.27,g));
+  g.userData.strips=strips;
+ }else{
+  if(type==="miner"){
+   cube(1.7,.5,1.7,dark,0,.4,0,g);cube(1.1,1.1,1.1,metal,0,1.15,0,g);
+   cube(.7,.2,.7,gold,0,1.8,0,g);
+   const drill=new THREE.Mesh(new THREE.CylinderGeometry(.12,.4,.8,8),gold);
+   drill.position.set(0,2.2,0);g.add(drill);g.userData.drill=drill;
+  }
+  if(type==="crusher"){
+   cube(1.8,1.3,1.8,metal,0,.75,0,g);cube(1.1,.7,1.1,dark,0,1.65,0,g);
+   const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.22,12),gold);
+   wheel.rotation.z=Math.PI/2;wheel.position.set(0,1.05,.95);g.add(wheel);g.userData.wheel=wheel;
+  }
+  if(type==="smelter"){
+   cube(1.8,1.4,1.8,metal,0,.8,0,g);cube(1.1,.6,1.1,dark,0,1.8,0,g);
+   cube(.65,.45,.15,new THREE.MeshStandardMaterial({color:0xff671c,emissive:0xff3900,emissiveIntensity:1}),0,.7,.93,g);
+   cube(.45,1,.45,dark,.5,2,0,g);
+  }
+  if(type==="assembler"){
+   cube(1.8,1.5,1.8,green,0,.85,0,g);cube(1.1,.25,1.1,dark,0,1.75,0,g);
+   cube(.3,.8,.3,gold,-.55,1.45,0,g);cube(.3,.8,.3,gold,.55,1.45,0,g);
+  }
+  if(type==="seller"){
+   cube(1.8,1.5,1.8,green,0,.8,0,g);cube(1.1,.5,.15,gold,0,1.8,.93,g);
+   cube(.8,.1,.8,dark,0,.25,0,g);
+  }
+  /* 投入口はローカル-z側 */
+  cube(.48,.35,.16,gold,0,.65,-1.02,g);
+  const arrow=makeArrow();arrow.position.set(0,1,-1.12);g.add(arrow);
+  cube(.48,.35,.16,green,0,.65,1.02,g);
+ }
+ scene.add(g);
+ const m={type,x,z,rot,group:g,progress:0,queue:[],active:false};
+ machines.push(m);return m;
+}
+function findBeltAt(x,z){return machines.find(m=>m.type==="belt"&&Math.hypot(m.x-x,m.z-z)<.8)}
+function getPort(m,side){
+ const d=dirFor(m.rot),sign=side==="output"?1:-1;
+ return {x:m.x+d.x*2*sign,z:m.z+d.z*2*sign};
+}
+
+/* ===== 建築 ===== */
+const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+const ghost=new THREE.Group();
+const ghostBase=new THREE.Mesh(new THREE.BoxGeometry(1.9,.12,1.9),new THREE.MeshBasicMaterial({color:0x35ffad,transparent:true,opacity:.25}));
+ghostBase.position.y=.2;ghost.add(ghostBase);
+const ghostArrow=makeArrow(0x35ffad);ghostArrow.position.set(0,.5,0);ghost.add(ghostArrow);
+scene.add(ghost);ghost.visible=false;
+function chooseBuild(type){
+ if(refundMode){refundMode=false;document.getElementById("refund").classList.remove("active")}
+ if(inventory[type]<=0){msg("先に販売所で購入してください");return}
+ buildMode=type;rotation=0;ghost.visible=true;
+ document.querySelectorAll("[data-build]").forEach(b=>b.classList.toggle("selected",b.dataset.build===type));
+ document.getElementById("buildInfo").textContent="設置："+names[type]+" / Rで方向変更";
+}
+function cancelBuild(){
+ buildMode=null;ghost.visible=false;
+ document.querySelectorAll("[data-build]").forEach(b=>b.classList.remove("selected","active"));
+ document.getElementById("buildInfo").textContent=refundMode?"返金モード：設備をタップ":"建築モード：なし";
+}
+function getGroundPoint(){
+ raycaster.setFromCamera(mouse,camera);
+ const hit=raycaster.intersectObject(floor);return hit.length?hit[0].point:null;
+}
+function place(){
+ if(!buildMode)return;
+ const p=getGroundPoint();if(!p)return;
+ const x=snap(p.x),z=snap(p.z);
+ if(Math.abs(x)>21||Math.abs(z)>21){msg("建築エリアの外です");return}
+ if(machines.some(m=>Math.abs(m.x-x)<1.3&&Math.abs(m.z-z)<1.3)){msg("そこには設置できません");return}
+ inventory[buildMode]--;createMachine(buildMode,x,z,rotation);
+ updateUI();msg(names[buildMode]+"を設置！");
+}
+document.getElementById("refund").onclick=()=>{
+ buildMode=null;ghost.visible=false;refundMode=!refundMode;
+ document.getElementById("refund").classList.toggle("active",refundMode);
+ document.querySelectorAll("[data-build]").forEach(b=>b.classList.remove("selected"));
+ document.getElementById("buildInfo").textContent=refundMode?"返金モード：撤去したい設備をタップ":"建築モード：なし";
+ msg(refundMode?"返金モード ON":"返金モード OFF");
+};
+function refundAtPoint(){
+ const p=getGroundPoint();if(!p)return;
+ const x=snap(p.x),z=snap(p.z);
+ const m=machines.find(m=>Math.hypot(m.x-x,m.z-z)<1.2);
+ if(!m){msg("撤去する設備がありません");return}
+ scene.remove(m.group);machines.splice(machines.indexOf(m),1);
+ money+=prices[m.type];updateUI();msg(names[m.type]+"を撤去！ "+prices[m.type]+"円返金");
+}
+
+/* ===== 生産ライン ===== */
+const recipes={
+ crusher:{input:"ore",output:"crushed",time:3.5},
+ smelter:{input:"crushed",output:"ingot",time:5},
+ assembler:{input:"ingot",output:"component",time:5}
+};
+function attachToBelt(item,belt){
+ item.belt=belt;item.progress=0;item.flying=false;
+ item.x=belt.x;item.z=belt.z;item.mesh.position.set(item.x,.7,item.z);
+}
+function ejectFromMachine(m,type){
+ const d=dirFor(m.rot),x=m.x+d.x*1.15,z=m.z+d.z*1.15;
+ const item=spawnItem(x,z,type);
+ item.vx=d.x*3.2;item.vz=d.z*3.2;item.vy=2.2;
+ item.targetBelt=findBeltAt(m.x+d.x*2,m.z+d.z*2)||null;
+}
+function tryMachineInput(item,x,z,travelDir){
+ for(const m of machines){
+  if(m.type==="seller"){
+   const port=getPort(m,"input");
+   if(item.type==="component"&&Math.hypot(x-port.x,z-port.z)<1.3){
+    const d=dirFor(m.rot);
+    if(travelDir.x*d.x+travelDir.z*d.z>.6){
+     removeItem(item);money+=40;product++;updateUI();msg("部品を販売！ +40円");return true;
+    }
+   }
+   continue;
+  }
+  const recipe=recipes[m.type];if(!recipe)continue;
+  const input=getPort(m,"input");
+  if(Math.hypot(x-input.x,z-input.z)<1.3&&item.type===recipe.input){
+   const d=dirFor(m.rot);
+   if(travelDir.x*d.x+travelDir.z*d.z>.6){
+    m.queue.push(item.type);removeItem(item);return true;
+   }
+  }
+ }
+ return false;
+}
+function updateBeltItem(item,dt){
+ const belt=item.belt,d=dirFor(belt.rot);
+ item.progress+=dt*2.1;
+ item.x=belt.x+d.x*item.progress;item.z=belt.z+d.z*item.progress;
+ item.mesh.position.set(item.x,.7,item.z);
+ if(item.progress>=2){
+  const nx=belt.x+d.x*2,nz=belt.z+d.z*2;
+  const next=findBeltAt(nx,nz);
+  if(next){attachToBelt(item,next);return}
   if(tryMachineInput(item,nx,nz,d))return;
-
-  // 次の設備がなければ地面に落とす
-  item.x=nx;
-  item.z=nz;
-  item.belt=null;
-  item.flying=false;
-  item.progress=0;
-  item.vx=0;
-  item.vz=0;
-  item.vy=0;
+  /* コンベアが途切れたら終点に落とす */
+  item.x=nx;item.z=nz;item.belt=null;item.flying=false;
+  item.progress=0;item.vx=0;item.vz=0;item.vy=0;
   item.mesh.position.set(nx,.7,nz);
-  item.mesh.rotation.set(
-   Math.random()*.4,
-   Math.random()*Math.PI*2,
-   Math.random()*.4
-  );
+  item.mesh.rotation.set(Math.random()*.3,Math.random()*6,Math.random()*.3);
  }
 }
-</script>
+function updateMachines(dt){
+ for(const m of machines){
+  if(m.type==="miner"){
+   m.progress+=dt;
+   if(m.progress>=3){
+    m.progress-=3;
+    if(nearestDeposit(m.x,m.z))ejectFromMachine(m,"ore");
+   }
+   if(m.group.userData.drill)m.group.userData.drill.rotation.y+=dt*3;
+  }
+  const recipe=recipes[m.type];
+  if(recipe){
+   if(!m.active&&m.queue.length){m.queue.shift();m.active=true;m.progress=0}
+   if(m.active){
+    m.progress+=dt;
+    if(m.progress>=recipe.time){m.progress=0;m.active=false;ejectFromMachine(m,recipe.output)}
+   }
+   if(m.type==="crusher"&&m.group.userData.wheel)m.group.userData.wheel.rotation.x+=dt*3;
+  }
+ }
+}
+function updateItems(dt){
+ for(let i=items.length-1;i>=0;i--){
+  const item=items[i];
+  if(item.belt){updateBeltItem(item,dt);continue}
+  if(item.flying){
+   item.vy-=9.8*dt;item.x+=item.vx*dt;item.z+=item.vz*dt;
+   let y=item.mesh.position.y+item.vy*dt;
+   if(y<.7){y=.7;item.vy=0;item.vx*=.55;item.vz*=.55;item.flying=false}
+   item.mesh.position.set(item.x,y,item.z);
+   if(item.targetBelt&&Math.hypot(item.x-item.targetBelt.x,item.z-item.targetBelt.z)<.75)attachToBelt(item,item.targetBelt);
+   else{
+    const belt=findBeltAt(item.x,item.z);
+    if(belt&&Math.hypot(item.x-belt.x,item.z-belt.z)<.65)attachToBelt(item,belt);
+   }
+  }
+  /* 落ちたアイテムは時間経過で削除しない */
+ }
+}
 
-<!-- ⑤ updateItems() 内の寿命による削除を変更 -->
-<!-- 元の if(item.life>90)removeItem(item); を削除 -->
-<!-- 落ちた鉱石が時間経過で消えなくなる -->
+/* ===== 操作UI ===== */
+document.getElementById("mine").addEventListener("pointerdown",e=>{
+ e.preventDefault();mineHeld=true;mine();
+});
+["pointerup","pointercancel","lostpointercapture"].forEach(type=>
+ document.getElementById("mine").addEventListener(type,()=>mineHeld=false)
+);
+document.getElementById("mine").addEventListener("contextmenu",e=>e.preventDefault());
+document.getElementById("cancel").onclick=cancelBuild;
+document.querySelectorAll("[data-build]").forEach(b=>b.onclick=()=>chooseBuild(b.dataset.build));
+document.getElementById("reset").onclick=()=>{
+ if(confirm("最初からやり直しますか？")){localStorage.removeItem("factory_save");location.reload()}
+};
 
-<!-- ⑥ chooseBuild() 内の最後に追加 -->
-<script>
-document.querySelectorAll(".hotSlot").forEach(b=>{
- b.classList.toggle("selected",b.dataset.build===type);
+/* ===== キーボード ===== */
+addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();keys[k]=true;
+ if(k==="e"){mineHeld=true;e.preventDefault()}
+ if(k==="r"&&buildMode){rotation+=Math.PI/2;ghost.rotation.y=rotation}
+});
+addEventListener("keyup",e=>{
+ const k=e.key.toLowerCase();keys[k]=false;if(k==="e")mineHeld=false;
+});
+addEventListener("blur",()=>{keys={};mineHeld=false});
+
+/* ===== 移動スティック ===== */
+const stick=document.getElementById("stick"),knob=document.getElementById("knob");
+let stickPointer=null,moveX=0,moveY=0;
+stick.addEventListener("pointerdown",e=>{
+ e.preventDefault();e.stopPropagation();stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);
+});
+stick.addEventListener("pointermove",e=>{
+ if(stickPointer!==e.pointerId)return;
+ e.preventDefault();
+ const r=stick.getBoundingClientRect();
+ let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+ const max=r.width*.29,len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max}
+ moveX=dx/max;moveY=dy/max;knob.style.transform=`translate(${dx}px,${dy}px)`;
+});
+function resetStick(){stickPointer=null;moveX=0;moveY=0;knob.style.transform="translate(0px,0px)"}
+stick.addEventListener("pointerup",resetStick);stick.addEventListener("pointercancel",resetStick);
+
+/* ===== 画面ドラッグ・設置 ===== */
+let cameraPointer=null,lastX=0,lastY=0,startX=0,startY=0,moved=false;
+function updateMouse(x,y){mouse.x=x/innerWidth*2-1;mouse.y=-(y/innerHeight)*2+1}
+function overUI(target){return !!target.closest("button,#stick,#shopPanel,#hotbar,#topGuide")}
+renderer.domElement.addEventListener("pointerdown",e=>{
+ if(overUI(e.target))return;
+ if(e.pointerType==="mouse"&&e.button!==0)return;
+ cameraPointer=e.pointerId;lastX=startX=e.clientX;lastY=startY=e.clientY;moved=false;
+ updateMouse(e.clientX,e.clientY);renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener("pointermove",e=>{
+ updateMouse(e.clientX,e.clientY);if(cameraPointer!==e.pointerId)return;
+ const dx=e.clientX-lastX,dy=e.clientY-lastY;
+ if(Math.hypot(e.clientX-startX,e.clientY-startY)>6)moved=true;
+ if(moved){yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch+dy*.004,-.2,1.1)}
+ lastX=e.clientX;lastY=e.clientY;
+});
+renderer.domElement.addEventListener("pointerup",e=>{
+ if(cameraPointer!==e.pointerId)return;
+ if(!moved){
+  updateMouse(e.clientX,e.clientY);
+  if(refundMode)refundAtPoint();else if(buildMode)place();
+ }
+ cameraPointer=null;
+});
+renderer.domElement.addEventListener("pointercancel",()=>cameraPointer=null);
+renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("selectstart",e=>e.preventDefault());
+document.addEventListener("touchmove",e=>{
+ if(e.target===document.body||e.target===renderer.domElement)e.preventDefault();
+},{passive:false});
+
+/* ===== メインループ ===== */
+const clock=new THREE.Clock();
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.04);
+ if(mineHeld)mine();
+
+ let forward=0,side=0;
+ if(keys.w||keys.arrowup)forward++;
+ if(keys.s||keys.arrowdown)forward--;
+ if(keys.a||keys.arrowleft)side--;
+ if(keys.d||keys.arrowright)side++;
+ forward+=-moveY;side+=moveX;
+ forward=THREE.MathUtils.clamp(forward,-1,1);
+ side=THREE.MathUtils.clamp(side,-1,1);
+ const direction=new THREE.Vector3(
+  -Math.sin(yaw)*forward+Math.cos(yaw)*side,0,
+  -Math.cos(yaw)*forward-Math.sin(yaw)*side
+ );
+ if(direction.length()>.05){
+  direction.normalize();player.position.addScaledVector(direction,dt*6);
+  player.rotation.y=Math.atan2(direction.x,direction.z);
+  walkTime+=dt*10;legs[0].rotation.x=Math.sin(walkTime)*.55;
+  legs[1].rotation.x=-Math.sin(walkTime)*.55;
+  arms[0].rotation.x=-Math.sin(walkTime)*.35;
+  arms[1].rotation.x=Math.sin(walkTime)*.35;
+ }else{
+  legs.forEach(l=>l.rotation.x=THREE.MathUtils.lerp(l.rotation.x,0,.2));
+  arms.forEach(a=>a.rotation.x=THREE.MathUtils.lerp(a.rotation.x,0,.2));
+ }
+ player.position.x=THREE.MathUtils.clamp(player.position.x,-23,23);
+ player.position.z=THREE.MathUtils.clamp(player.position.z,-23,23);
+
+ const target=player.position.clone().add(new THREE.Vector3(0,1,0));
+ const distanceCam=8;
+ const offset=new THREE.Vector3(
+  Math.sin(yaw)*Math.cos(pitch)*distanceCam,
+  Math.sin(pitch)*distanceCam+2,
+  Math.cos(yaw)*Math.cos(pitch)*distanceCam
+ );
+ camera.position.lerp(target.clone().add(offset),.12);camera.lookAt(target);
+
+ if(buildMode){
+  const p=getGroundPoint();
+  if(p){ghost.visible=true;ghost.position.set(snap(p.x),.3,snap(p.z));ghost.rotation.y=rotation}
+ }else ghost.visible=false;
+
+ /* 鉱石が乗っているベルトだけ表面を動かす */
+ for(const m of machines){
+  if(m.type!=="belt")continue;
+  const active=items.some(i=>i.belt===m);
+  const strips=m.group.userData.strips;
+  for(const s of strips){
+   if(active){s.position.z+=dt*1.5;if(s.position.z>.85)s.position.z=-.85}
+  }
+ }
+
+ updateMachines(dt);updateItems(dt);pickupItems();
+ const shopButton=document.getElementById("shopOpen");
+ shopButton.style.display=nearShop()&&document.getElementById("shopPanel").style.display!=="block"?"block":"none";
+ renderer.render(scene,camera);
+}
+animate();
+
+/* ===== セーブ・ロード ===== */
+function save(){
+ localStorage.setItem("factory_save",JSON.stringify({
+  money,ore,product,inventory,
+  machines:machines.map(m=>({type:m.type,x:m.x,z:m.z,rot:m.rot}))
+ }));
+}
+function load(){
+ try{
+  const data=JSON.parse(localStorage.getItem("factory_save"));
+  if(!data)return;
+  money=data.money??100;ore=data.ore??0;product=data.product??0;
+  Object.assign(inventory,data.inventory||{});
+  for(const m of data.machines||[])createMachine(m.type,m.x,m.z,m.rot);
+ }catch(e){console.log("Save error",e)}
+}
+load();updateUI();setInterval(save,3000);
+addEventListener("resize",()=>{
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
 });
 </script>
-
-<!-- ⑦ cancelBuild() 内に追加 -->
-<script>
-document.querySelectorAll(".hotSlot").forEach(b=>{
- b.classList.remove("selected");
-});
-</script>
-
-<!-- ⑧ 建築ボタンのイベント登録はそのまま使える -->
-<!-- 既存の data-build ボタン登録処理が上部アイテム欄にも適用される -->
+</body>
+</html>
